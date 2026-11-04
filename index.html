@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#091514">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LAST SIGNAL">
+<title>LAST SIGNAL — Zombie Survival</title>
+<link rel="icon" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { color-scheme:dark; --cream:#f5edd8; --muted:#9bb1a9; --orange:#f99b54; --glass:rgba(9,23,22,.84); --line:rgba(207,234,210,.17) }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none }
+html,body { margin:0;width:100%;height:100%;overflow:hidden;background:#091514;color:var(--cream);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none }
+button {font:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
+#game {width:100%;height:100%;display:block;touch-action:none}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 32%,rgba(0,0,0,.42) 100%)}
+#hud {position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 16px) 0 calc(env(safe-area-inset-left) + 16px);display:flex;justify-content:space-between;gap:12px;align-items:flex-start;pointer-events:none;z-index:5}
+#hud.hidden,#controls.hidden {display:none}
+.stat-panel {width:210px;max-width:36vw;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);background:rgba(6,19,19,.78);border-radius:14px;padding:10px 12px;box-shadow:0 12px 30px #0005;backdrop-filter:blur(8px)}
+.stat-line{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:1px;font-weight:750}
+.stat-line .sym{width:17px;font-size:13px;text-align:center}
+.track{height:6px;flex:1;border-radius:20px;background:#3a4542;overflow:hidden}.fill{display:block;width:100%;height:100%;border-radius:20px;transition:width .2s linear}.hp{background:linear-gradient(90deg,#bb554d,#f28d75)}.hunger{background:linear-gradient(90deg,#aa813e,#e1bf73)}.thirst{background:linear-gradient(90deg,#3686a7,#63c9de)}
+.stat-num{min-width:26px;text-align:right;font-size:10px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.center-hud{flex:1;min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.day-badge{padding:7px 16px;border:1px solid #cba5786e;border-radius:99px;background:rgba(14,28,26,.83);font-size:11px;font-weight:850;letter-spacing:2px;white-space:nowrap}
+#objective{max-width:330px;padding:7px 11px;border-radius:9px;color:#d7e4d4;background:rgba(9,23,22,.7);font-size:11px;line-height:1.5}
+.right-hud{display:flex;align-items:flex-start;gap:7px;justify-content:flex-end;min-width:190px;max-width:36vw}
+.inventory-quick{background:rgba(6,19,19,.76);border:1px solid var(--line);border-radius:11px;padding:9px 10px;display:flex;gap:10px;align-items:center;font-size:11px;font-weight:800;color:#dae5d9;white-space:nowrap}
+.small-btn{pointer-events:auto;min-width:36px;min-height:36px;background:rgba(11,31,28,.9);border:1px solid rgba(216,238,223,.24);border-radius:11px;font-size:18px}
+#controls{position:absolute;inset:0;z-index:6;pointer-events:none}
+#joy-zone{position:absolute;left:calc(env(safe-area-inset-left) + 10px);bottom:calc(env(safe-area-inset-bottom) + 10px);width:38%;height:59%;max-height:295px;pointer-events:auto;touch-action:none}
+#joy-base{position:absolute;left:56px;bottom:49px;width:128px;height:128px;border-radius:50%;border:2px solid rgba(219,232,214,.24);background:radial-gradient(circle,rgba(151,190,158,.14),rgba(8,26,26,.34));box-shadow:inset 0 0 30px #0004,0 0 28px #0003;pointer-events:none;transition:opacity .1s}
+#joy-base:before,#joy-base:after {content:"";position:absolute;background:#b6cfc580}
+#joy-base:before{height:1px;left:11px;right:11px;top:50%}#joy-base:after{width:1px;top:11px;bottom:11px;left:50%}
+#joy-knob{position:absolute;left:41px;top:41px;width:44px;height:44px;border-radius:50%;border:2px solid #ebddbd99;background:linear-gradient(145deg,#b6c9ac,#627f6c);box-shadow:0 3px 15px #0008}
+#joy-hint{position:absolute;bottom:19px;left:79px;font-size:9px;letter-spacing:2px;color:#dce7d0a9;font-weight:800}
+#actions{position:absolute;right:calc(env(safe-area-inset-right) + 22px);bottom:calc(env(safe-area-inset-bottom) + 26px);display:grid;grid-template-columns:repeat(2,minmax(75px,90px));grid-template-rows:repeat(2,65px);gap:10px;pointer-events:auto}
+.action{background:linear-gradient(180deg,rgba(37,58,48,.96),rgba(12,30,27,.96));border:1px solid #b5c8ae5b;border-radius:15px;box-shadow:0 6px 16px #0008,inset 0 1px #fff2;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-weight:850;font-size:10px;letter-spacing:1px;touch-action:manipulation;transition:transform .08s,background .1s}
+.action .action-icon{font-size:23px;line-height:1.2}
+.action:active,.action.pressed{transform:scale(.92);background:#537a59}
+.action.orange{background:linear-gradient(180deg,#b95a30,#763722);border-color:#f9aa6e;box-shadow:0 7px 25px #0008,inset 0 1px #ffd7b155}
+#hint{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 7px);left:50%;transform:translateX(-50%);min-width:180px;text-align:center;font-size:10px;color:#bacbc0aa;letter-spacing:.8px;z-index:4;pointer-events:none}
+#toast{position:absolute;top:25%;left:50%;transform:translate(-50%,-10px);opacity:0;z-index:18;pointer-events:none;max-width:min(88vw,500px);padding:12px 20px;border-radius:12px;background:rgba(8,25,23,.96);border:1px solid #f99b547c;box-shadow:0 12px 45px #0009;font-size:12px;letter-spacing:.9px;text-align:center;font-weight:800;transition:opacity .2s,transform .2s}
+#toast.shown{opacity:1;transform:translate(-50%,0)}
+#overlay{position:absolute;inset:0;z-index:25;background:radial-gradient(ellipse at 45% 38%,rgba(30,54,43,.85),rgba(3,14,16,.98)),linear-gradient(120deg,#152620,#050d11);display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 12px) calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 12px) calc(env(safe-area-inset-left) + 12px);overflow:auto;touch-action:pan-y}
+#overlay.hidden{display:none}
+#overlay:before{content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0px,transparent 3px,#e6e6dc 4px)}
+.panel{position:relative;width:min(100%,700px);max-height:100%;overflow:auto;touch-action:pan-y;background:linear-gradient(142deg,rgba(26,47,41,.95),rgba(6,20,21,.97));border:1px solid #a2c2a54a;border-radius:22px;box-shadow:0 20px 70px #000c;padding:clamp(18px,4vh,38px);scrollbar-width:thin}
+.eyebrow{color:var(--orange);letter-spacing:3px;font-size:10px;font-weight:900;text-transform:uppercase}
+.logo{font-weight:1000;font-size:clamp(38px,7vw,68px);letter-spacing:-2.8px;line-height:1.04;margin:10px 0 12px;text-shadow:0 3px 22px #000b}
+.logo span{color:var(--orange)}
+.lede{color:#b6c9c0;line-height:1.7;font-size:13px;margin-bottom:20px;max-width:510px}
+.features{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 23px}
+.feature{font-size:10px;color:#c6d5ce;border:1px solid #ffffff21;border-radius:40px;padding:7px 11px;background:#ffffff0a}
+.modal-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.primary,.secondary{border-radius:11px;border:1px solid #f6ae78;min-height:43px;padding:10px 19px;font-size:12px;letter-spacing:1.3px;font-weight:850}
+.primary{background:linear-gradient(180deg,#ed9956,#b35b35);color:#231b17}.secondary{background:rgba(21,47,39,.65);border-color:#abc2b46e;color:#eee9d9}.primary:disabled,.secondary:disabled{opacity:.35;cursor:default}
+.modal-title{margin:8px 0 13px;font-size:27px;letter-spacing:1px}.subtitle{color:#c5d4ca;font-size:12px;line-height:1.5;margin:0 0 15px}
+.recipes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.recipe{display:flex;align-items:flex-start;gap:9px;text-align:left;padding:12px;border-radius:12px;background:#152e28;border:1px solid #7b95834b;min-height:100px}.recipe.enabled{border-color:#ca9f66b8}.recipe:disabled{opacity:.53;cursor:default}.recipe .glyph{font-size:28px;line-height:1.3}.recipe .detail{display:flex;flex-direction:column;gap:4px;font-size:11px;color:#becdc1}.recipe strong{font-size:12px;color:var(--cream);letter-spacing:1px}.recipe em{font-style:normal;color:#e9b77c;font-size:10px}
+.supply-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:15px 0}.supply{padding:13px 8px;border-radius:10px;border:1px solid #adc3aa3d;background:rgba(255,255,255,.045);text-align:center;font-size:11px}.supply .big{font-size:22px;margin-bottom:4px}.supply .count{font-weight:900;color:#f6b982;font-size:18px}
+.tiny{font-size:10px;color:#99ada4;line-height:1.6}.divider{height:1px;background:#ffffff20;margin:15px 0}
+#landscape-warning{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:none;z-index:7;color:#f6cd99;background:#071614df;padding:6px 10px;border-radius:7px;font-size:10px;white-space:nowrap;pointer-events:none}
+@media (orientation:portrait) and (max-width:650px){#landscape-warning{display:block}#hud{gap:5px;padding:calc(env(safe-area-inset-top) + 6px) 7px 0}.stat-panel{width:105px;max-width:35vw;padding:6px;gap:3px}.stat-line{font-size:8px;gap:3px}.stat-line .sym{width:12px;font-size:10px}.stat-num{min-width:17px;font-size:8px}.center-hud{gap:4px}.day-badge{font-size:9px;padding:6px 8px}#objective{font-size:9px;padding:5px 6px}.right-hud{min-width:0;max-width:25vw;gap:3px}.inventory-quick{display:none}.small-btn{min-height:31px;min-width:31px}#joy-base{left:4px;bottom:36px;width:110px;height:110px}#joy-knob{left:34px;top:34px}#joy-hint{left:30px;bottom:7px}#actions{right:calc(env(safe-area-inset-right) + 8px);bottom:calc(env(safe-area-inset-bottom) + 28px);grid-template-columns:repeat(2,66px);grid-template-rows:repeat(2,57px);gap:6px}.action{font-size:8px}.action .action-icon{font-size:20px}#hint{display:none}.recipes{grid-template-columns:1fr}.panel{padding:16px}.logo{font-size:42px}}
+@media(max-height:480px){#hud{padding-top:calc(env(safe-area-inset-top) + 5px)}.stat-panel{padding:7px 10px;gap:4px}.day-badge{padding:5px 12px}#objective{padding:4px 9px}#joy-zone{bottom:4px;height:62%}#joy-base{bottom:26px;width:105px;height:105px;left:35px}#joy-knob{left:32px;top:32px}#joy-hint{bottom:2px;left:52px}#actions{bottom:calc(env(safe-area-inset-bottom) + 10px);grid-template-columns:repeat(2,75px);grid-template-rows:repeat(2,54px);gap:7px}.action .action-icon{font-size:20px}.panel{padding:17px}.logo{font-size:45px}}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="LAST SIGNAL Zombie-Survival-Spiel"></canvas>
+<div id="vignette"></div>
+<div id="hud" class="hidden">
+  <div class="stat-panel">
+    <div class="stat-line"><span class="sym">♥</span><span class="track"><span class="fill hp" id="hpBar"></span></span><span class="stat-num" id="hpText">100</span></div>
+    <div class="stat-line"><span class="sym">◆</span><span class="track"><span class="fill hunger" id="foodBar"></span></span><span class="stat-num" id="foodText">95</span></div>
+    <div class="stat-line"><span class="sym">≈</span><span class="track"><span class="fill thirst" id="waterBar"></span></span><span class="stat-num" id="waterText">95</span></div>
+  </div>
+  <div class="center-hud"><div class="day-badge" id="dayText">TAG 1 · TAG</div><div id="objective">Überlebe bis Tag 3 · Baue ein Lagerfeuer</div></div>
+  <div class="right-hud"><div class="inventory-quick" id="quickStats">🪵 2 &nbsp; 🪨 0 &nbsp; ⚙ 0</div><button class="small-btn" id="muteBtn" aria-label="Ton an oder aus">♫</button><button class="small-btn" id="pauseBtn" aria-label="Pausieren">Ⅱ</button></div>
+</div>
+<div id="controls" class="hidden">
+  <div id="joy-zone"><div id="joy-base"><div id="joy-knob"></div></div><div id="joy-hint">BEWEGEN</div></div>
+  <div id="actions">
+    <button id="attackBtn" class="action orange"><span class="action-icon">⚔</span>ANGRIFF</button>
+    <button id="gatherBtn" class="action"><span class="action-icon">✋</span>SAMMELN</button>
+    <button id="craftBtn" class="action"><span class="action-icon">⚒</span>CRAFTING</button>
+    <button id="bagBtn" class="action"><span class="action-icon">▣</span>RUCKSACK</button>
+  </div>
+</div>
+<div id="hint">WASD · E SAMMELN · LEERTASTE ANGRIFF · C CRAFTING</div>
+<div id="landscape-warning">↻ Im Querformat spielt es sich besser</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="overlay"><div class="panel" id="panel"></div></div>
+<script>
+(() => {
+'use strict';
+const $=id=>document.getElementById(id), cvs=$('game'), g=cvs.getContext('2d',{alpha:false});
+const W=2900,H=2140,DAY=110,SAVE='last_signal_html5_v1',TWO=Math.PI*2;
+const LABELS={wood:'Holz',stone:'Stein',scrap:'Schrott',berry:'Beeren',water:'Wasser',cloth:'Stoff',medkit:'Verbände'};
+const ICONS={wood:'🪵',stone:'🪨',scrap:'⚙️',berry:'🍓',water:'💧',cloth:'🧵',medkit:'✚'};
+const RECIPES=[
+ {key:'spear',name:'SPEER',icon:'⚔️',cost:{wood:4,stone:2},desc:'Erhöhter Nahkampfschaden und Reichweite'},
+ {key:'medkit',name:'VERBAND',icon:'✚',cost:{cloth:2,berry:2},desc:'Heilt 45 Lebenspunkte im Rucksack'},
+ {key:'fire',name:'LAGERFEUER',icon:'🔥',cost:{wood:6,stone:4},desc:'Heilt in seiner Nähe und schreckt Zombies ab'},
+ {key:'wall',name:'BARRIKADE',icon:'▤',cost:{wood:4,scrap:3},desc:'Blockiert und verlangsamt Zombies'},
+ {key:'radio',name:'FUNKSIGNAL',icon:'📡',cost:{wood:10,stone:8,scrap:14,cloth:3},desc:'Ab Tag 3 mit Lagerfeuer: Rettung rufen'}
+];
+let mode='menu',state=null,resources=[],terrain=[],shacks=[],cars=[],zombies=[],particles=[],cam={x:0,y:0},view={w:1,h:1,dpr:1,zoom:1},clock=0,prev=0,hudTime=0,spawnTime=0,attackCD=0,shake=0,toastHandle=0,muted=false,joystick={x:0,y:0,pointer:null},keys={},audio=null;
+const rnd=(a,b)=>a+Math.random()*(b-a), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function seeded(seed){let x=seed>>>0;return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296}}
+const worldRand=seeded(919342);
+function palette(){const night=state?isNight():false;return night?{ground:'#162c2e',patch:'#22403a'}:{ground:'#263e32',patch:'#36503a'}}
+function isNight(){return state&&((state.elapsed%DAY)/DAY)>.65}
+function day(){return state?Math.floor(state.elapsed/DAY)+1:1}
+function fresh(){return {x:0,y:0,hp:100,food:95,water:95,elapsed:0,kills:0,inv:{wood:2,stone:0,scrap:0,berry:3,water:3,cloth:1,medkit:0},spear:false,harvested:[],placed:[],face:Math.PI/2,won:false}}
+function buildWorld(){
+ resources=[];terrain=[];shacks=[];cars=[];worldRand();
+ const random=seeded(184216);
+ const kinds=['tree','tree','tree','stone','stone','scrap','scrap','berry','berry','water','cloth'];
+ for(let i=0;i<465;i++){let x=(random()-.5)*(W-90),y=(random()-.5)*(H-90);terrain.push({x,y,r:8+random()*37,v:random()})}
+ for(let i=0;i<330;i++){
+  let x=(random()-.5)*(W-115),y=(random()-.5)*(H-120);
+  if(Math.hypot(x,y)<135){x+=x>0?170:-170;y+=y>0?160:-160}
+  const kind=kinds[Math.floor(random()*kinds.length)];
+  resources.push({id:i,x,y,kind,phase:random()*6.28,taken:false});
+ }
+ // Fertige Ressourcen in der Startzone für einen fairen Einstieg.
+ [['tree',205,85],['tree',-175,80],['stone',-140,-140],['stone',180,-135],['scrap',270,-165],['berry',70,180],['water',-65,220],['cloth',-255,-55],['scrap',-225,180],['tree',310,30],['stone',60,-270],['scrap',-55,-290]].forEach(([kind,x,y],i)=>resources.push({id:330+i,x,y,kind,phase:i,taken:false}));
+ shacks=[{x:-840,y:-460,ang:.04},{x:990,y:570,ang:-.15},{x:390,y:-730,ang:.1},{x:-1090,y:510,ang:-.06}];
+ cars=[{x:400,y:-265,ang:.08},{x:-490,y:-250,ang:-.05},{x:780,y:-270,ang:.22},{x:-920,y:-240,ang:-.14}];
+}
+function restore(){try{const s=JSON.parse(localStorage.getItem(SAVE)||'null');if(!s||!s.inv||!Number.isFinite(s.x))return null;const d=fresh();Object.assign(d,s);d.inv=Object.assign(d.inv,s.inv);return d}catch(e){return null}}
+function persist(){if(!state||!['playing','paused','craft','bag'].includes(mode))return;try{localStorage.setItem(SAVE,JSON.stringify(state))}catch(e){}}
+function erase(){try{localStorage.removeItem(SAVE)}catch(e){}}
+function start(resume){state=resume?restore():null;if(!state){state=fresh();erase()}buildWorld();const used=new Set(state.harvested);resources.forEach(r=>r.taken=used.has(r.id));zombies=[];particles=[];cam.x=state.x;cam.y=state.y;clock=0;prev=0;spawnTime=0;attackCD=0;mode='playing';$('overlay').classList.add('hidden');$('hud').classList.remove('hidden');$('controls').classList.remove('hidden');updateHUD();toast('Überlebe bis Tag 3. Sammle Vorräte.');playTone('start');}
+function menu(){mode='menu';const saved=restore();$('overlay').classList.remove('hidden');$('hud').classList.add('hidden');$('controls').classList.add('hidden');$('panel').innerHTML=`
+ <div class="eyebrow">OFFLINE SURVIVAL · EINSATZBERICHT 001</div>
+ <div class="logo">LAST <span>SIGNAL</span></div>
+ <p class="lede">Die Städte sind verstummt. Die Infizierten ziehen durch die Wälder. Sammle Ressourcen, fertige Waffen, sichere dein Lager und überlebe, bis du an <b>Tag 3</b> die Rettung über Funk rufen kannst.</p>
+ <div class="features"><span class="feature">☣ Zombie-KI</span><span class="feature">⚒ Crafting</span><span class="feature">☾ Tag & Nacht</span><span class="feature">▣ Speichersystem</span><span class="feature">📱 Touch</span></div>
+ <div class="modal-actions"><button class="primary" data-do="new">NEUES SPIEL STARTEN</button>${saved?'<button class="secondary" data-do="continue">SPIELSTAND FORTSETZEN</button>':''}</div>
+ <div class="divider"></div><p class="tiny">Bewegen: linker virtueller Stick · SAMMELN neben Ressourcen · ANGRIFF in Zombie-Reichweite · CRAFTING für Werkzeuge und Lager · RUCKSACK für Essen, Trinken und Verbände. Fortschritt wird lokal im Browser gespeichert.</p>`;
+}
+function pause(){if(mode!=='playing')return;mode='paused';persist();joystick.x=joystick.y=0;showPanel('pause')}
+function resume(){mode='playing';$('overlay').classList.add('hidden');prev=0}
+function showPanel(type){if(!state)return;mode=type;joystick.x=joystick.y=0;const html={
+ pause:`<div class="eyebrow">EINSATZ UNTERBROCHEN</div><h2 class="modal-title">PAUSE</h2><p class="subtitle">Tag ${day()} · ${state.kills} Zombies besiegt · Speichern automatisch aktiviert.</p><div class="modal-actions"><button class="primary" data-do="resume">WEITERSPIELEN</button><button class="secondary" data-do="save">SPEICHERN</button><button class="secondary" data-do="menu">HAUPTMENÜ</button></div>`,
+ craft:`<div class="eyebrow">ÜBERLEBEN · WERKBANK</div><h2 class="modal-title">CRAFTING</h2><p class="subtitle">Fertige Waffen und Bauwerke aus gesammelten Materialien. Zum Bauen benötigst du die angegebenen Rohstoffe.</p><div class="recipes">${RECIPES.map(r=>{const ready=afford(r.cost)&&(r.key!=='radio'||(day()>=3&&state.placed.some(p=>p.kind==='fire')))&&(r.key!=='spear'||!state.spear);const cost=Object.entries(r.cost).map(([k,v])=>`${ICONS[k]} ${v}`).join(' · ');return `<button class="recipe ${ready?'enabled':''}" data-craft="${r.key}" ${ready?'':'disabled'}><span class="glyph">${r.icon}</span><span class="detail"><strong>${r.name}</strong><span>${r.desc}</span><em>${cost}</em></span></button>`}).join('')}</div><div class="modal-actions"><button class="secondary" data-do="resume">ZURÜCK ZUM SPIEL</button></div><div class="tiny" style="margin-top:10px">Funksignal: ab Tag 3 und nur mit mindestens einem Lagerfeuer.</div>`,
+ bag:`<div class="eyebrow">INVENTAR · VERBRAUCHSGÜTER</div><h2 class="modal-title">RUCKSACK</h2><div class="supply-list">${Object.keys(LABELS).map(k=>`<div class="supply"><div class="big">${ICONS[k]}</div>${LABELS[k]}<div class="count">${state.inv[k]||0}</div></div>`).join('')}</div><div class="modal-actions"><button class="primary" data-do="eat" ${state.inv.berry?'':'disabled'}>🍓 ESSEN (+27)</button><button class="primary" data-do="drink" ${state.inv.water?'':'disabled'}>💧 TRINKEN (+38)</button><button class="primary" data-do="heal" ${(state.inv.medkit&&state.hp<100)?'':'disabled'}>✚ VERBAND (+45)</button></div><p class="tiny" style="margin-top:12px">${state.spear?'⚔ Speer ausgerüstet · + Reichweite und Schaden':'Noch keine Waffe gefertigt · ein Speer hilft im Kampf.'}</p><div class="modal-actions"><button class="secondary" data-do="resume">ZURÜCK ZUM SPIEL</button></div>`
+ }[type];$('panel').innerHTML=html;$('overlay').classList.remove('hidden');persist()}
+function afford(cost){return Object.entries(cost).every(([k,n])=>(state.inv[k]||0)>=n)}
+function craft(key){const r=RECIPES.find(x=>x.key===key);if(!r||!afford(r.cost)){toast('Nicht genügend Materialien');return}if(key==='spear'&&state.spear)return;if(key==='radio'&&!(day()>=3&&state.placed.some(p=>p.kind==='fire')))return;
+ for(const [k,n] of Object.entries(r.cost))state.inv[k]-=n;
+ if(key==='spear')state.spear=true;
+ if(key==='medkit')state.inv.medkit++;
+ if(key==='fire'||key==='wall'){
+  const p={x:clamp(state.x+Math.cos(state.face)*95,-W/2+70,W/2-70),y:clamp(state.y+Math.sin(state.face)*95,-H/2+70,H/2-70),kind:key};state.placed.push(p);burst(p.x,p.y,key==='fire'?'#f5a45d':'#c4a886',15);
+ }
+ if(key==='radio'){state.won=true;mode='win';erase();finish(true);return}
+ toast(r.name+' hergestellt!');playTone('craft');persist();showPanel('craft');updateHUD();
+}
+function consume(type){if(!state||!state.inv[type]){toast('Nichts mehr im Rucksack');return}if(type==='berry'){state.inv.berry--;state.food=clamp(state.food+27,0,100)}else if(type==='water'){state.inv.water--;state.water=clamp(state.water+38,0,100)}else if(type==='medkit'){if(state.hp>=100)return;state.inv.medkit--;state.hp=clamp(state.hp+45,0,100)}playTone('drink');toast(type==='berry'?'Beeren gegessen':type==='water'?'Wasser getrunken':'Wunde versorgt');updateHUD();persist();if(mode==='bag')showPanel('bag')}
+function finish(won){mode=won?'win':'dead';erase();$('overlay').classList.remove('hidden');$('controls').classList.add('hidden');$('panel').innerHTML=`<div class="eyebrow">${won?'FUNKSIGNAL ERFOLGREICH':'SIGNAL ABGEBROCHEN'}</div><div class="logo">${won?'GERETTET <span>!</span>':'DU BIST <span>GEFALLEN</span>'}</div><p class="lede">${won?'Nach drei Tagen im Sperrgebiet erreicht dein Funkspruch die Rettungsmannschaft. Du hast es geschafft.':'Die Infizierten und die harte Wildnis haben dich überwältigt. Dein letzter Funkspruch bleibt unbeantwortet.'}</p><div class="features"><span class="feature">Tag ${day()}</span><span class="feature">${state.kills} Zombies besiegt</span><span class="feature">${state.placed.length} Bauwerke</span></div><div class="modal-actions"><button class="primary" data-do="new">NOCH EINMAL SPIELEN</button><button class="secondary" data-do="menu">HAUPTMENÜ</button></div>`;playTone(won?'win':'dead')}
+function toast(s){const el=$('toast');el.textContent=s;el.classList.add('shown');clearTimeout(toastHandle);toastHandle=setTimeout(()=>el.classList.remove('shown'),2400)}
+function playTone(kind){if(muted)return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audio)audio=new AC();if(audio.state==='suspended')audio.resume();const now=audio.currentTime;const spec={attack:[110,72,.09,'sawtooth'],loot:[450,730,.12,'sine'],craft:[330,610,.2,'triangle'],drink:[520,670,.13,'sine'],hurt:[140,64,.21,'square'],win:[392,784,.5,'sine'],dead:[260,58,.5,'sawtooth'],start:[240,380,.15,'sine']}[kind]||[350,440,.1,'sine'];const o=audio.createOscillator(),a=audio.createGain();o.type=spec[3];o.frequency.setValueAtTime(spec[0],now);o.frequency.exponentialRampToValueAtTime(Math.max(30,spec[1]),now+spec[2]);a.gain.setValueAtTime(.0001,now);a.gain.exponentialRampToValueAtTime(.075,now+.014);a.gain.exponentialRampToValueAtTime(.0001,now+spec[2]);o.connect(a);a.connect(audio.destination);o.start(now);o.stop(now+spec[2]+.03)}catch(e){}}
+function updateHUD(){if(!state)return;const bars=[['hpBar','hpText',state.hp],['foodBar','foodText',state.food],['waterBar','waterText',state.water]];for(let [b,t,n] of bars){$(b).style.width=clamp(n,0,100)+'%';$(t).textContent=Math.round(n)}$('dayText').textContent=`TAG ${day()} · ${isNight()?'NACHT':'TAG'} · ☣ ${state.kills}`;$('quickStats').textContent=`🪵 ${state.inv.wood||0}　🪨 ${state.inv.stone||0}　⚙ ${state.inv.scrap||0}`;const fire=state.placed.some(p=>p.kind==='fire');$('objective').textContent=day()<3?`Überlebe noch ${Math.ceil(DAY*2-state.elapsed)} s · ${fire?'✓ Lagerfeuer gebaut':'Baue ein Lagerfeuer'}`:fire?'Tag 3 erreicht! Stelle das FUNKSIGNAL her.':'Tag 3 erreicht! Baue ein LAGERFEUER.';const near=nearestResource();$('gatherBtn').style.borderColor=near?'#f1ce85':'#b5c8ae5b';$('gatherBtn').style.background=near?'linear-gradient(180deg,#557446,#1a3b2d)':''}
+function nearestResource(){let best=null,bd=84;for(let r of resources){if(r.taken)continue;const d=Math.hypot(r.x-state.x,r.y-state.y);if(d<bd){best=r;bd=d}}return best}
+function gather(){if(mode!=='playing')return;const r=nearestResource();if(!r){toast('Geh näher an eine Ressource');return}const amounts={tree:['wood',2+Math.floor(Math.random()*3)],stone:['stone',1+Math.floor(Math.random()*3)],scrap:['scrap',2+Math.floor(Math.random()*3)],berry:['berry',2+Math.floor(Math.random()*2)],water:['water',1+Math.floor(Math.random()*2)],cloth:['cloth',1+Math.floor(Math.random()*2)]};let [item,n]=amounts[r.kind];state.inv[item]=(state.inv[item]||0)+n;r.taken=true;state.harvested.push(r.id);burst(r.x,r.y,r.kind==='water'?'#77c8d0':'#e6ba73',9);toast(`+${n} ${LABELS[item]}`);playTone('loot');updateHUD();persist()}
+function attack(){if(mode!=='playing'||attackCD>0)return;attackCD=state.spear?.43:.56;playTone('attack');let hit=0;for(let z of zombies){const d=distance(z,state);if(d>(state.spear?114:82))continue;const a=Math.atan2(z.y-state.y,z.x-state.x);let da=Math.atan2(Math.sin(a-state.face),Math.cos(a-state.face));if(Math.abs(da)>1.4)continue;z.hp-=state.spear?58:28;z.flash=.17;hit++;burst(z.x,z.y,'#ba554d',6);if(z.hp<=0){state.kills++;z.dead=true;burst(z.x,z.y,'#9f4b43',16)}}if(!hit){burst(state.x+Math.cos(state.face)*70,state.y+Math.sin(state.face)*70,'#f9c785',4)}zombies=zombies.filter(z=>!z.dead);shake=hit?4:1;updateHUD()}
+function burst(x,y,color,n){for(let i=0;i<n;i++){const a=rnd(0,TWO),s=rnd(25,115);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rnd(.25,.8),max:.8,r:rnd(2,6),color})}}
+function addZombie(){if(zombies.length>=22)return;const a=rnd(0,TWO),d=rnd(460,740),x=clamp(state.x+Math.cos(a)*d,-W/2+55,W/2-55),y=clamp(state.y+Math.sin(a)*d,-H/2+55,H/2-55);if(Math.hypot(x-state.x,y-state.y)<330)return;zombies.push({x,y,hp:isNight()?94:76,speed:rnd(42,64)+(isNight()?23:0),phase:rnd(0,6),attack:0,flash:0,dir:0})}
+function update(dt){if(mode!=='playing'||!state)return;dt=Math.min(dt,.05);state.elapsed+=dt;attackCD=Math.max(0,attackCD-dt);spawnTime+=dt;hudTime+=dt;state.food=clamp(state.food-dt*.094,0,100);state.water=clamp(state.water-dt*.14,0,100);if(state.food===0||state.water===0)state.hp-=dt*3.5;
+ let vx=joystick.x,vy=joystick.y;if(keys.ArrowLeft||keys.KeyA)vx-=1;if(keys.ArrowRight||keys.KeyD)vx+=1;if(keys.ArrowUp||keys.KeyW)vy-=1;if(keys.ArrowDown||keys.KeyS)vy+=1;const m=Math.hypot(vx,vy);if(m>.1){vx/=Math.max(1,m);vy/=Math.max(1,m);const speed=state.food<12||state.water<12?165:217;state.x=clamp(state.x+vx*speed*dt,-W/2+30,W/2-30);state.y=clamp(state.y+vy*speed*dt,-H/2+30,H/2-30);state.face=Math.atan2(vy,vx)}
+ const fire=state.placed.find(p=>p.kind==='fire'&&distance(p,state)<140);if(fire){state.hp=clamp(state.hp+dt*(isNight()?1.8:.65),0,100)}
+ for(let z of zombies){z.phase+=dt*6;z.attack=Math.max(0,z.attack-dt);z.flash=Math.max(0,z.flash-dt);const dx=state.x-z.x,dy=state.y-z.y,d=Math.hypot(dx,dy)||1;z.dir=Math.atan2(dy,dx);if(d>36){let slowing=1;for(let p of state.placed)if(p.kind==='wall'&&distance(p,z)<95)slowing=.22;if(fire&&distance(fire,z)<170)slowing*=.35;z.x+=dx/d*z.speed*slowing*dt;z.y+=dy/d*z.speed*slowing*dt}else if(z.attack<=0){z.attack=1.2;state.hp-=isNight()?13:10;shake=9;playTone('hurt');burst(state.x,state.y,'#bd5e58',12)}
+ }
+ zombies=zombies.filter(z=>Math.abs(z.x-state.x)<1120&&Math.abs(z.y-state.y)<850);
+ for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.97;p.vy*=.97;p.life-=dt;if(p.life<=0)particles.splice(i,1)}
+ if(spawnTime>(isNight()?6.2:10.8)){spawnTime=0;addZombie();if(isNight()&&Math.random()<.45)addZombie()}
+ if(state.hp<=0){state.hp=0;finish(false);return}
+ if(hudTime>.22){hudTime=0;updateHUD()}
+ if(Math.floor(state.elapsed)%18===0&&Math.floor(state.elapsed)!==Math.floor(state.elapsed-dt))persist();
+}
+function resize(){view.dpr=Math.min(2.25,window.devicePixelRatio||1);view.w=window.innerWidth;view.h=window.innerHeight;cvs.width=Math.round(view.w*view.dpr);cvs.height=Math.round(view.h*view.dpr);g.setTransform(view.dpr,0,0,view.dpr,0,0);view.zoom=clamp(Math.min(view.w/970,view.h/590),.62,1.2);if(view.w<view.h)view.zoom=clamp(view.w/560,.66,1.05)}
+window.addEventListener('resize',resize,{passive:true});resize();
+function rounded(x,y,w,h,r,fill,stroke='',lw=1){g.beginPath();g.roundRect(x,y,w,h,r);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw;g.stroke()}}
+function circle(x,y,r,fill,stroke='',lw=1){g.beginPath();g.arc(x,y,r,0,TWO);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw;g.stroke()}}
+function polygon(pts,fill,stroke='',lw=1){g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw;g.stroke()}}
+function drawGround(t){const p=palette();g.fillStyle=p.ground;g.fillRect(-W/2,-H/2,W,H);
+ for(let a of terrain){if(!visible(a.x,a.y,90))continue;g.save();g.translate(a.x,a.y);g.rotate(a.v*6);g.fillStyle=p.patch;g.globalAlpha=.34;g.beginPath();g.ellipse(0,0,a.r*2.5,a.r*.6,0,0,TWO);g.fill();g.restore();}
+ // Gebrochene Fahrbahn und Wegmarkierungen.
+ rounded(-W/2+8,-350,W-16,178,9,'#353d39','#444b42',4);g.fillStyle='#293531';for(let x=-W/2+12;x<W/2;x+=120)rounded(x,-268,65,6,2,'#a6a18b88');for(let x=-W/2+50;x<W/2;x+=250){g.fillStyle='#50584a';g.fillRect(x,-347,4,170)}
+ // Lagerplatz am Ursprung.
+ circle(0,0,132,'#6a71454a','#c0b47644',3);for(let j=0;j<10;j++){let a=j*TWO/10;circle(Math.cos(a)*121,Math.sin(a)*121,3,'#a4a27b')}
+ // Geschützter Startmarker.
+ g.strokeStyle='#e3b97899';g.setLineDash([8,8]);circle(0,0,42,'','#e1b8798c',2);g.setLineDash([]);
+ g.strokeStyle='#cd7858';g.lineWidth=9;g.strokeRect(-W/2+2,-H/2+2,W-4,H-4);
+ }
+function visible(x,y,r=90){return Math.abs(x-cam.x)<view.w/(2*view.zoom)+r&&Math.abs(y-cam.y)<view.h/(2*view.zoom)+r}
+function drawCabin(s){g.save();g.translate(s.x,s.y);g.rotate(s.ang);rounded(-104,-69,208,138,7,'#625a44','#302f29',7);for(let i=-85;i<100;i+=24){g.strokeStyle='#806d50';g.lineWidth=4;g.beginPath();g.moveTo(i,-64);g.lineTo(i,62);g.stroke()}rounded(-50,-70,55,26,2,'#292c28','#a4a17c',3);rounded(32,-68,54,26,2,'#353e3c','#b5ad80',3);rounded(-30,18,65,51,3,'#241c17','#807b64',4);rounded(-97,-80,195,14,2,'#42372b');g.restore()}
+function drawCar(c){g.save();g.translate(c.x,c.y);g.rotate(c.ang);rounded(-77,-32,154,64,10,'#6f5143','#342f2a',6);rounded(-25,-32,70,64,8,'#203533','#e9ba7d66',4);rounded(-60,-36,29,11,3,'#191c1a');rounded(47,-36,29,11,3,'#191c1a');rounded(-60,25,29,11,3,'#191c1a');rounded(47,25,29,11,3,'#191c1a');polygon([[62,-32],[77,-17],[81,-35]],'#a5ab92');g.restore()}
+function drawResource(r,t){g.save();g.translate(r.x,r.y);const sway=Math.sin(t*.8+r.phase)*1.8;g.fillStyle='#0005';g.beginPath();g.ellipse(0,16,36,12,0,0,TWO);g.fill();switch(r.kind){
+ case'tree':rounded(-9,-16,18,46,4,'#66503c','#342c26',3);circle(-17+sway,-27,29,'#2b563a','#1a382b',3);circle(19+sway,-24,29,'#28543a','#1a382b',3);circle(sway,-47,36,'#326d46','#204a33',3);circle(-9+sway,-58,10,'#54835a77');break;
+ case'stone':polygon([[-35,13],[-23,-11],[4,-27],[26,-15],[38,14],[17,26],[-27,22]],'#87958d','#455951',4);polygon([[-23,-12],[4,-26],[13,-8],[-6,3]],'#b2bdb2');break;
+ case'scrap':g.save();g.rotate(.35);rounded(-35,-11,70,20,3,'#77857f','#39433e',3);rounded(-23,-24,51,11,3,'#b4774b');rounded(-6,-18,27,35,3,'#8e988c','#45504d',3);g.restore();break;
+ case'berry':circle(0,-3,26,'#2c713d','#204b30',3);circle(-11,-17,17,'#377a44');circle(15,-16,15,'#377a44');for(let a of [[-15,-2],[9,1],[1,-22]])circle(a[0],a[1],6,'#d54b48','#ef7e69',2);break;
+ case'water':rounded(-15,-24,30,48,8,'#2c839e','#b0f1e877',3);rounded(-8,-30,16,9,2,'#b8d4d2');rounded(-11,-5,22,12,2,'#91cfdba9');break;
+ case'cloth':g.save();g.rotate(.2);rounded(-25,-20,50,42,8,'#b5a98b','#6f6955',3);rounded(-20,-11,40,8,2,'#6f775e');g.restore();break;
+ }if(state&&Math.hypot(r.x-state.x,r.y-state.y)<88){g.strokeStyle='#f8d997';g.lineWidth=2;g.setLineDash([5,5]);circle(0,0,42,'','#f4d38ba8',2);g.setLineDash([])}g.restore()}
+function drawPlaced(p,t){g.save();g.translate(p.x,p.y);if(p.kind==='fire'){circle(0,4,52,'#ff9c3e17');for(let a=0;a<7;a++){const ang=a*TWO/7;circle(Math.cos(ang)*27,Math.sin(ang)*13+10,13,'#777b6d','#303a34',2)}polygon([[-17,22],[-7,-20],[3,7],[12,-31],[22,21]],'#dc6941');polygon([[-10,17],[0,-12],[7,0],[13,19]],'#f9cb61');circle(2,3,24,'#ffb24e33')}else{rounded(-55,-22,110,44,7,'#735846','#3d382f',4);for(let i=-37;i<50;i+=25)rounded(i,-24,10,50,2,'#a58b60','#3d352d',3);rounded(-57,-3,114,10,2,'#ac8156')}g.restore()}
+function drawZombie(z,t){g.save();g.translate(z.x,z.y);g.rotate(z.dir+Math.PI/2);circle(1,20,19,'#0006');const bob=Math.sin(z.phase)*2;rounded(-15,-12+bob,30,38,12,z.flash>0?'#e2d8ad':'#546a56','#263e31',3);circle(0,-17+bob,15,z.flash>0?'#e8ccaa':'#96a583','#445744',3);circle(-5,-19+bob,3,'#ef7255');circle(6,-19+bob,3,'#ef7255');g.strokeStyle='#697768';g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(-13,-8);g.lineTo(-24,9+Math.sin(t*8+z.phase)*5);g.moveTo(13,-8);g.lineTo(25,9-Math.sin(t*8+z.phase)*5);g.stroke();g.strokeStyle='#424e43';g.beginPath();g.moveTo(-6,22);g.lineTo(-10,37);g.moveTo(7,22);g.lineTo(10,37);g.stroke();g.restore();if(z.hp<76){rounded(z.x-24,z.y-51,48,5,2,'#211b1c');rounded(z.x-24,z.y-51,48*clamp(z.hp/94,0,1),5,2,'#c77062')}}
+function drawPlayer(t){const p=state;g.save();g.translate(p.x,p.y);g.rotate(p.face+Math.PI/2);const moving=Math.abs(joystick.x)+Math.abs(joystick.y)>0.08||keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD;const bob=moving?Math.sin(t*12)*2:0;circle(1,18,21,'#0007');g.strokeStyle='#24342c';g.lineWidth=11;g.lineCap='round';g.beginPath();g.moveTo(-7,18);g.lineTo(-10,37+bob);g.moveTo(7,18);g.lineTo(10,37-bob);g.stroke();rounded(-16,-12+bob,32,39,11,'#927653','#3b4a36',3);rounded(-12,-8+bob,24,21,5,'#557567');circle(0,-18+bob,16,'#d9ad81','#5b4939',3);rounded(-13,-33+bob,26,12,5,'#3c5c4a');g.strokeStyle='#bd9978';g.lineWidth=8;g.beginPath();g.moveTo(-16,-7);g.lineTo(-24,7+bob);g.moveTo(16,-7);g.lineTo(24,7+bob);g.stroke();if(p.spear){g.strokeStyle='#dfc49a';g.lineWidth=5;g.beginPath();g.moveTo(21,11+bob);g.lineTo(25,-62+bob);g.stroke();polygon([[25,-74+bob],[16,-54+bob],[33,-54+bob]],'#d8dee0','#6d7d7d',2)}g.restore();
+ // Markierung des eigenen Charakters.
+ g.textAlign='center';g.font='800 10px system-ui';g.fillStyle='#d6f0c9';g.fillText('DU',p.x,p.y-47)}
+function drawNight(t){if(!state)return;const phase=(state.elapsed%DAY)/DAY;let a=phase<.56?0:phase<.7?(phase-.56)/.14*.57:phase<.94?.57:(1-phase)/.06*.57;g.fillStyle=`rgba(1,9,29,${clamp(a,0,.6)})`;g.fillRect(0,0,view.w,view.h);if(a>.12){const cx=view.w/2,cy=view.h/2,light=g.createRadialGradient(cx,cy,20,cx,cy,300*view.zoom);light.addColorStop(0,'rgba(75,111,96,.20)');light.addColorStop(1,'rgba(75,111,96,0)');g.fillStyle=light;g.fillRect(0,0,view.w,view.h)}
+ // Flashlight-Ring im Nachtmodus.
+ if(a>.2){g.save();g.globalCompositeOperation='destination-out';const grad=g.createRadialGradient(view.w/2,view.h/2,17,view.w/2,view.h/2,170*view.zoom);grad.addColorStop(0,'rgba(0,0,0,.2)');grad.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=grad;g.fillRect(0,0,view.w,view.h);g.restore()}}
+function render(t){g.setTransform(view.dpr,0,0,view.dpr,0,0);g.fillStyle='#091514';g.fillRect(0,0,view.w,view.h);if(!state)return;
+ cam.x+=(state.x-cam.x)*.085;cam.y+=(state.y-cam.y)*.085;let sx=shake?rnd(-shake,shake):0,sy=shake?rnd(-shake,shake):0;shake*=.84;if(shake<.2)shake=0;
+ g.save();g.translate(view.w/2+sx,view.h/2+sy);g.scale(view.zoom,view.zoom);g.translate(-cam.x,-cam.y);drawGround(t);
+ for(const s of shacks)if(visible(s.x,s.y,220))drawCabin(s);for(const c of cars)if(visible(c.x,c.y,130))drawCar(c);
+ const objects=[];for(const r of resources)if(!r.taken&&visible(r.x,r.y,85))objects.push({y:r.y,draw:()=>drawResource(r,t)});for(let p of state.placed)if(visible(p.x,p.y,90))objects.push({y:p.y,draw:()=>drawPlaced(p,t)});for(let z of zombies)if(visible(z.x,z.y,80))objects.push({y:z.y,draw:()=>drawZombie(z,t)});objects.push({y:state.y,draw:()=>drawPlayer(t)});objects.sort((a,b)=>a.y-b.y);for(let o of objects)o.draw();
+ for(let p of particles){g.globalAlpha=clamp(p.life/p.max,0,1);circle(p.x,p.y,p.r,p.color)}g.globalAlpha=1;g.restore();drawNight(t);
+ // Weltgrenze und Entfernungshinweise sind bewusst ohne HUD-Unordnung.
+}
+function frame(ts){let dt=prev?Math.min((ts-prev)/1000,.05):0;prev=ts;const t=ts/1000;if(mode==='playing')update(dt);render(t);requestAnimationFrame(frame)}
+function setupJoystick(){const zone=$('joy-zone'),base=$('joy-base'),knob=$('joy-knob');let origin={x:0,y:0};const update=e=>{const dx=e.clientX-origin.x,dy=e.clientY-origin.y;const d=Math.hypot(dx,dy),max=48;let nx=d?dx/Math.max(d,max):0,ny=d?dy/Math.max(d,max):0;joystick.x=nx;joystick.y=ny;knob.style.transform=`translate(${clamp(dx,-max,max)}px,${clamp(dy,-max,max)}px)`};zone.addEventListener('pointerdown',e=>{if(mode!=='playing'||joystick.pointer!==null)return;e.preventDefault();joystick.pointer=e.pointerId;zone.setPointerCapture(e.pointerId);const rect=base.getBoundingClientRect();origin.x=rect.left+rect.width/2;origin.y=rect.top+rect.height/2;update(e)});zone.addEventListener('pointermove',e=>{if(e.pointerId!==joystick.pointer)return;e.preventDefault();update(e)});const release=e=>{if(e.pointerId!==joystick.pointer)return;joystick.pointer=null;joystick.x=joystick.y=0;knob.style.transform='translate(0px,0px)'};zone.addEventListener('pointerup',release);zone.addEventListener('pointercancel',release);window.addEventListener('blur',()=>{joystick.pointer=null;joystick.x=joystick.y=0;knob.style.transform='translate(0px,0px)';persist();if(mode==='playing')pause()})}
+setupJoystick();
+$('attackBtn').addEventListener('pointerdown',e=>{e.preventDefault();attack()});$('gatherBtn').addEventListener('pointerdown',e=>{e.preventDefault();gather()});$('craftBtn').addEventListener('click',()=>{if(mode==='playing')showPanel('craft')});$('bagBtn').addEventListener('click',()=>{if(mode==='playing')showPanel('bag')});$('pauseBtn').addEventListener('click',pause);$('muteBtn').addEventListener('click',()=>{muted=!muted;$('muteBtn').textContent=muted?'♪̸':'♫';toast(muted?'Ton deaktiviert':'Ton aktiviert')});
+$('panel').addEventListener('click',e=>{const target=e.target.closest('[data-do],[data-craft]');if(!target)return;const action=target.dataset.do;if(target.dataset.craft){craft(target.dataset.craft);return}if(action==='new')start(false);else if(action==='continue')start(true);else if(action==='resume')resume();else if(action==='save'){persist();toast('Spielstand gespeichert')}else if(action==='menu'){persist();menu()}else if(action==='eat')consume('berry');else if(action==='drink')consume('water');else if(action==='heal')consume('medkit')});
+window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code))e.preventDefault();keys[e.code]=true;if(e.repeat)return;if(mode==='playing'){if(e.code==='Space')attack();if(e.code==='KeyE')gather();if(e.code==='KeyC')showPanel('craft');if(e.code==='KeyI'||e.code==='KeyB')showPanel('bag');if(e.code==='Escape'||e.code==='KeyP')pause();if(e.code==='Digit1')consume('berry');if(e.code==='Digit2')consume('water');if(e.code==='Digit3')consume('medkit')}else if(['paused','craft','bag'].includes(mode)&&e.code==='Escape')resume()});window.addEventListener('keyup',e=>keys[e.code]=false);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){persist();if(mode==='playing')pause()}});window.addEventListener('pagehide',persist);
+document.addEventListener('touchmove',e=>{if(!e.target.closest('.panel'))e.preventDefault()},{passive:false});
+// Entwicklungs-/QA-Informationen für lokale Tests, ohne Netzwerkanfragen.
+window.LAST_SIGNAL_DEBUG={getMode:()=>mode,getState:()=>state&&JSON.parse(JSON.stringify(state)),getWorld:()=>({resources:resources.length,zombies:zombies.length,structures:state?.placed.length||0}),newGame:()=>start(false),gather,attack,craft,consume,showPanel,update,save:persist,load:restore};
+buildWorld();menu();requestAnimationFrame(frame);
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+})();
+</script>
+</body>
+</html>
